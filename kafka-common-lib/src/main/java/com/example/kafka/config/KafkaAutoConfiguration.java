@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.kafka.DefaultKafkaConsumerFactoryCustomizer;
 import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 
 @AutoConfiguration
@@ -25,6 +26,12 @@ public class KafkaAutoConfiguration {
     @ConditionalOnMissingBean(name = "kafkaHardConsumerCustomizer")
     public DefaultKafkaConsumerFactoryCustomizer kafkaHardConsumerCustomizer() {
         return new KafkaConsumerConfig().hardSettingsCustomizer();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public IdempotencyRedisStore idempotencyRedisStore(StringRedisTemplate redis) {
+        return new IdempotencyRedisStore(redis);
     }
 
     @Bean

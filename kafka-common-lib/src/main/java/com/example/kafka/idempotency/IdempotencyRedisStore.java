@@ -1,11 +1,9 @@
 package com.example.kafka.idempotency;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-@Component
 public class IdempotencyRedisStore {
 
     private static final String KEY_PREFIX = "idempotency:";
