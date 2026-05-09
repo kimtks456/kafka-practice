@@ -1,0 +1,5 @@
+name: connect-status
+partitions: 5
+replication-factor: 1
+configs:
+  cleanup.policy: compact

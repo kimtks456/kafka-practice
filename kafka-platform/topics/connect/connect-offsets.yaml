@@ -1,0 +1,5 @@
+name: connect-offsets
+partitions: 25
+replication-factor: 1
+configs:
+  cleanup.policy: compact

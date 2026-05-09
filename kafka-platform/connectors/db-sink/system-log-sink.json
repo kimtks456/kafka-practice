@@ -1,7 +1,7 @@
 {
   "name": "system-log-sink",
   "config": {
-    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "connector.class": "io.aiven.connect.jdbc.JdbcSinkConnector",
     "tasks.max": "1",
     "topics": "prd.log.system.v1",
     "connection.url": "${env:DB_URL}",
