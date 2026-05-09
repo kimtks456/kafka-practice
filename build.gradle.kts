@@ -1,8 +1,10 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.5.14" apply false
-    id("io.spring.dependency-management") version "1.1.7" apply false
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.dep.management) apply false
 }
+
+val springBootVersion = libs.versions.spring.boot.get()
 
 subprojects {
     apply(plugin = "java")
@@ -20,7 +22,7 @@ subprojects {
 
     the<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension>().apply {
         imports {
-            mavenBom("org.springframework.boot:spring-boot-dependencies:3.5.14")
+            mavenBom("org.springframework.boot:spring-boot-dependencies:$springBootVersion")
         }
     }
 }
