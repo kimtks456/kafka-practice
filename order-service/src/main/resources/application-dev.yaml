@@ -2,7 +2,7 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
   datasource:
-    url: jdbc:postgresql://localhost:5432/orderdb
+    url: jdbc:postgresql://localhost:5432/appdb
     username: postgres
     password: postgres
   data:
