@@ -16,6 +16,37 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    healthcheck:
+      test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 5s
+      timeout: 10s
+      retries: 15
+
+  # topics/ 아래 YAML에 정의된 토픽을 Kafka 기동 후 자동 생성한다.
+  # --if-not-exists: 재시작 시 기존 토픽을 건드리지 않아 충돌 없음.
+  # config 변경(retention, 파티션 수 등)은 init이 반영하지 않으므로
+  # 변경이 필요하면 kafka-configs.sh --alter 또는 down -v 후 재기동.
+  init-kafka:
+    image: apache/kafka:latest
+    container_name: init-kafka
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c", "
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
+        --create --if-not-exists \
+        --topic prd.order.created.v1 --partitions 6 --replication-factor 1 \
+        --config retention.ms=604800000 --config cleanup.policy=delete &&
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
+        --create --if-not-exists \
+        --topic prd.order.cancelled.v1 --partitions 6 --replication-factor 1 \
+        --config retention.ms=604800000 --config cleanup.policy=delete &&
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
+        --create --if-not-exists \
+        --topic prd.log.system.v1 --partitions 3 --replication-factor 1 \
+        --config retention.ms=2592000000 --config cleanup.policy=delete &&
+      echo 'Topics created.'
+    "]
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -27,7 +58,8 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   redis:
     image: redis:7-alpine
