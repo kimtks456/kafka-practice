@@ -22,6 +22,6 @@ gradle.properties
 .DS_Store
 Thumbs.db
 
-# Secrets
+# Secrets (application-dev/qa.yaml 은 커밋 대상, prd 는 제외)
 .env
-application-local.yaml
+application-prd.yaml

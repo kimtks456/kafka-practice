@@ -1,0 +1,11 @@
+spring:
+  kafka:
+    bootstrap-servers: kafka.qa.internal:9092
+  datasource:
+    url: jdbc:postgresql://db.qa.internal:5432/orderdb
+    username: order_user
+    password: ${DB_PASSWORD}
+  data:
+    redis:
+      host: redis.qa.internal
+      port: 6379

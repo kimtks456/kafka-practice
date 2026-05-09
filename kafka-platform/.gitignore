@@ -3,5 +3,6 @@
 *.swp
 Thumbs.db
 
-# Secrets
+# Secrets (.env.dev/.env.qa 는 커밋 대상, .env.prd 와 .env 는 제외)
 .env
+.env.prd

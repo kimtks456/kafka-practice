@@ -9,7 +9,7 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_HOST:-localhost}:9092
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -22,31 +22,18 @@ services:
       timeout: 10s
       retries: 15
 
-  # topics/ 아래 YAML에 정의된 토픽을 Kafka 기동 후 자동 생성한다.
-  # --if-not-exists: 재시작 시 기존 토픽을 건드리지 않아 충돌 없음.
-  # config 변경(retention, 파티션 수 등)은 init이 반영하지 않으므로
-  # 변경이 필요하면 kafka-configs.sh --alter 또는 down -v 후 재기동.
+  # topics/ 하위 YAML을 읽어 토픽을 자동 생성한다.
+  # 토픽 추가 시 docker-compose.yml 수정 없이 YAML 파일 추가만 하면 된다.
   init-kafka:
     image: apache/kafka:latest
     container_name: init-kafka
     depends_on:
       kafka:
         condition: service_healthy
-    entrypoint: ["/bin/bash", "-c", "
-      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
-        --create --if-not-exists \
-        --topic prd.order.created.v1 --partitions 6 --replication-factor 1 \
-        --config retention.ms=604800000 --config cleanup.policy=delete &&
-      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
-        --create --if-not-exists \
-        --topic prd.order.cancelled.v1 --partitions 6 --replication-factor 1 \
-        --config retention.ms=604800000 --config cleanup.policy=delete &&
-      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
-        --create --if-not-exists \
-        --topic prd.log.system.v1 --partitions 3 --replication-factor 1 \
-        --config retention.ms=2592000000 --config cleanup.policy=delete &&
-      echo 'Topics created.'
-    "]
+    volumes:
+      - ../topics:/topics:ro
+      - ../scripts:/scripts:ro
+    entrypoint: ["/bin/bash", "/scripts/create-topics.sh"]
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
