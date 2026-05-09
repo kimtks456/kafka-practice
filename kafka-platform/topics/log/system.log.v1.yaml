@@ -1,0 +1,6 @@
+name: prd.log.system.v1
+partitions: 3
+replication-factor: 1
+configs:
+  retention.ms: "2592000000"   # 30일
+  cleanup.policy: delete

@@ -1,0 +1,6 @@
+name: prd.order.created.v1
+partitions: 6
+replication-factor: 1   # 로컬 단일 브로커
+configs:
+  retention.ms: "604800000"
+  cleanup.policy: delete

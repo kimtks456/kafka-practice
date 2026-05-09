@@ -1,0 +1,18 @@
+{
+  "name": "system-log-sink",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "tasks.max": "2",
+    "topics": "prd.log.system.v1",
+    "connection.url": "${env:DB_URL}",
+    "connection.user": "${env:DB_USER}",
+    "connection.password": "${env:DB_PASSWORD}",
+    "insert.mode": "insert",
+    "auto.create": "false",
+    "auto.evolve": "false",
+    "table.name.format": "kafka_system_log",
+    "pk.mode": "none",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+  }
+}

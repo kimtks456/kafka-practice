@@ -1,0 +1,6 @@
+name: prd.order.cancelled.v1
+partitions: 6
+replication-factor: 1
+configs:
+  retention.ms: "604800000"
+  cleanup.policy: delete
