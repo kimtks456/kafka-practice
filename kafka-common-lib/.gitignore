@@ -1,0 +1,7 @@
+# Gradle (루트 .gitignore와 중복이나 서브모듈 독립 실행 대비)
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Secrets
+.env

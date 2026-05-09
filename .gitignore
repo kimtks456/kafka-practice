@@ -1,7 +1,18 @@
+# Gradle
 .gradle/
 build/
 *.class
+gradle.properties
+
+# IDE
 .idea/
 *.iml
+*.iws
+*.ipr
+.vscode/
+
+# OS
 .DS_Store
-gradle.properties
+
+# Secrets
+.env
