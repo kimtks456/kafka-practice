@@ -1,0 +1,5 @@
+kafka:
+  topic:
+    order-idempotency-with: order.idempotency-with
+    order-idempotency-without: order.idempotency-without
+    order-idempotency-aggregate: order.idempotency-aggregate

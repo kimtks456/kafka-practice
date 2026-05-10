@@ -1,0 +1,30 @@
+spring:
+  output:
+    ansi:
+      enabled: always
+  application:
+    name: log-service
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.example.kafka.events.*"
+        spring.json.value.default.type: com.example.kafka.events.log.SystemLogEvent
+  jpa:
+    open-in-view: false
+
+server:
+  port: ${SERVER_PORT:8090}
+
+kafka:
+  topic:
+    system-log: log.created
+  consumer:
+    system-log:
+      group-id: log-service

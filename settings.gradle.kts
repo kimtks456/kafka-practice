@@ -1,2 +1,2 @@
 rootProject.name = "kafka-practice"
-include("kafka-common-lib", "order-service")
+include("kafka-common-lib", "order-service", "log-service")

@@ -1,0 +1,6 @@
+name: log.created
+partitions: 3
+replication-factor: 1
+configs:
+  retention.ms: "2592000000"   # 30일
+  cleanup.policy: delete
