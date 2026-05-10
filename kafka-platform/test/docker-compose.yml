@@ -112,6 +112,48 @@ services:
 #      DB_USER: ${POSTGRES_USER:-postgres}
 #      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
 
+  order-service:
+    build:
+      context: ../..
+      dockerfile: order-service/Dockerfile
+    container_name: order-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      init-kafka:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+
+  log-service:
+    build:
+      context: ../..
+      dockerfile: log-service/Dockerfile
+    container_name: log-service
+    ports:
+      - "8090:8090"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      init-kafka:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-appdb}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
   nexus:
     image: sonatype/nexus3:latest
     container_name: nexus
