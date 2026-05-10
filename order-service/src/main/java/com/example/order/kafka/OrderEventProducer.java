@@ -5,6 +5,7 @@ import com.example.kafka.events.order.OrderItem;
 import com.example.order.domain.CreateOrderRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,12 +18,14 @@ import java.util.UUID;
 public class OrderEventProducer {
 
     private static final Logger log = LoggerFactory.getLogger(OrderEventProducer.class);
-    private static final String TOPIC = "prd.order.created.v1";
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final String topic;
 
-    public OrderEventProducer(KafkaTemplate<String, Object> kafkaTemplate) {
+    public OrderEventProducer(KafkaTemplate<String, Object> kafkaTemplate,
+                              @Value("${kafka.topic.order-created}") String topic) {
         this.kafkaTemplate = kafkaTemplate;
+        this.topic = topic;
     }
 
     public String publish(CreateOrderRequest request) {
@@ -41,7 +44,7 @@ public class OrderEventProducer {
             eventId, orderId, request.customerId(), items, total, Instant.now()
         );
 
-        kafkaTemplate.send(TOPIC, orderId, event);
+        kafkaTemplate.send(topic, orderId, event);
         log.info("[Producer] OrderCreated 발행. orderId={} eventId={}", orderId, eventId);
         return orderId;
     }

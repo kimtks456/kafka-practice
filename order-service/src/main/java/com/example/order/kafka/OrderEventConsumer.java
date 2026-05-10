@@ -13,7 +13,7 @@ public class OrderEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(OrderEventConsumer.class);
 
-    @KafkaListener(topics = "prd.order.created.v1", groupId = "order-service")
+    @KafkaListener(topics = "${kafka.topic.order-created}", groupId = "${kafka.consumer.order-created.group-id}")
     @IdempotentConsumer(keyType = IdempotencyKey.EVENT_ID, ttlSeconds = 86400)
     public void handle(OrderCreatedEvent event) {
         log.info("[Consumer] OrderCreated 수신. orderId={} totalAmount={}",

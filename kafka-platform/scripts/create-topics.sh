@@ -4,9 +4,9 @@
 # retention.ms 없는 compact 토픽(connect 내부 토픽 등)도 처리한다.
 set -e
 
-BOOTSTRAP=${KAFKA_BOOTSTRAP:-kafka:9092}
+BOOTSTRAP=${KAFKA_BOOTSTRAP:-kafka:29092}
 
-for f in $(find /topics -name "*.yaml" | sort); do
+for f in $(find /topics -name "*.yaml" -not -path "*/connect/*" | sort); do
   name=$(grep '^name:'                  "$f" | awk '{print $2}')
   partitions=$(grep '^partitions:'      "$f" | awk '{print $2}')
   replication=$(grep '^replication-factor:' "$f" | awk '{print $2}')
