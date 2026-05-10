@@ -6,7 +6,7 @@
 
 ---
 
-## 목표 기능
+## 1. 목표 기능
 
 | # | 기능 | 설명 |
 |---|------|------|
@@ -16,7 +16,7 @@
 
 ---
 
-## 모듈 구성
+## 2. 모듈 구성
 
 | 모듈 | 역할 |
 |------|------|
@@ -26,7 +26,7 @@
 
 ---
 
-## 주요 설계 원칙
+## 3. 주요 설계 원칙
 
 **Hard / Soft 설정 분리**
 - `kafka-common-lib`이 `acks=all`, `enable.idempotence=true`, `isolation.level=read_committed` 등 안전성 필수 설정을 `DefaultKafkaProducerFactoryCustomizer`로 강제 적용
@@ -41,7 +41,7 @@
 
 ---
 
-## 로컬 실행
+## 4. 로컬 실행
 
 > **사전 조건 — Colima**  
 > 이 프로젝트는 Docker Desktop 대신 [Colima](https://github.com/abiosoft/colima)를 사용한다.  
@@ -51,7 +51,7 @@
 > brew install colima docker docker-compose
 > ```
 
-### 1. Colima 시작
+### 4.1 Colima 시작
 
 ```bash
 colima start
@@ -59,7 +59,7 @@ colima start
 
 이미 실행 중이면 건너뛴다 (`colima status`로 확인).
 
-### 2. Testcontainers 환경변수 설정
+### 4.2 Testcontainers 환경변수 설정
 
 Testcontainers가 Colima 소켓을 찾을 수 있도록 `~/.zshrc`에 아래 두 줄이 있어야 한다.
 
@@ -74,39 +74,149 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
 source ~/.zshrc
 ```
 
-### 3. 인프라 기동
+### 4.3 인프라 기동
 
 ```bash
 docker compose -f kafka-platform/test/docker-compose.yml up -d
 ```
 
-### 4. 토픽 생성
+### 4.4 토픽 생성
+
+토픽은 `init-kafka` 컨테이너가 `kafka-platform/topics/` 하위 YAML을 읽어 자동 생성한다.  
+수동으로 만들거나 확인할 때:
 
 ```bash
+# 목록 조회
+docker exec kafka /opt/kafka/bin/kafka-topics.sh \
+  --bootstrap-server localhost:9092 --list
+
+# 단건 생성
 docker exec kafka /opt/kafka/bin/kafka-topics.sh \
   --bootstrap-server localhost:9092 --create \
-  --topic prd.order.created.v1 --partitions 6 --replication-factor 1
+  --topic order.created --partitions 6 --replication-factor 1
 ```
 
-### 5. order-service 실행
+### 4.5 order-service 실행
 
 ```bash
 ./gradlew :order-service:bootRun
 ```
 
-### 6. 이벤트 발행 테스트
+### 4.6 메시지 발행 예시
 
+#### order.created
+
+order-service가 orderId(UUID)를 key로 자동 설정한다.
+
+**curl**
 ```bash
 curl -X POST http://localhost:8080/orders \
   -H "Content-Type: application/json" \
-  -d '{"customerId":"c001","items":[{"productId":"p1","quantity":2,"price":9900}]}'
+  -d '{
+    "customerId": "c001",
+    "items": [
+      {"productId": "p1", "productName": "노트북", "quantity": 1, "unitPrice": 1200000}
+    ]
+  }'
 ```
 
-Kafka UI → http://localhost:8989 에서 메시지 확인 가능.
+**Kafka UI** (http://localhost:8989 → Topics → order.created → Produce Message)
+
+| 필드 | 예시 |
+|------|------|
+| Key | `550e8400-e29b-41d4-a716-446655440001` |
+| Value | 아래 JSON |
+
+```json
+{
+  "eventId":    "550e8400-e29b-41d4-a716-446655440000",
+  "aggregateId": "550e8400-e29b-41d4-a716-446655440001",
+  "customerId": "c001",
+  "items": [
+    {"productId": "p1", "productName": "노트북", "quantity": 1, "unitPrice": 1200000}
+  ],
+  "totalAmount": 1200000,
+  "occurredAt": "2026-05-11T00:00:00Z"
+}
+```
 
 ---
 
-## Nexus 배포 (kafka-common-lib)
+#### log.created
+
+log.created는 order-service API가 없으므로 Kafka UI로 직접 발행한다.  
+(curl로 Kafka에 직접 publish하려면 Kafka REST Proxy 필요)
+
+**Kafka UI** (http://localhost:8989 → Topics → log.created → Produce Message)
+
+| 필드 | 예시 |
+|------|------|
+| Key | `550e8400-e29b-41d4-a716-446655440002` |
+| Value | 아래 JSON |
+
+```json
+{
+  "eventId":    "550e8400-e29b-41d4-a716-446655440002",
+  "aggregateId": "order-service",
+  "serviceId":  "order-service",
+  "level":      "INFO",
+  "message":    "주문 처리 완료",
+  "context":    {"traceId": "trace-001", "orderId": "order-abc"},
+  "occurredAt": "2026-05-11T00:00:00Z"
+}
+```
+
+발행 후 log-service가 소비해 PostgreSQL `system_log` 테이블에 적재된다.
+
+---
+
+## 5. 로그 / 디버깅
+
+### 5.1 브로커 로그
+
+```bash
+docker logs -f kafka
+```
+
+### 5.2 Kafka 브로커 버전 확인
+
+```bash
+docker logs kafka 2>&1 | grep "metadata.version"
+```
+
+출력 예: `Publishing initial metadata ... with metadata.version Optional[4.2-IV1]`
+
+### 5.3 토픽 메시지 실시간 조회
+
+```bash
+# 처음부터
+docker exec kafka /opt/kafka/bin/kafka-console-consumer.sh \
+  --bootstrap-server localhost:9092 \
+  --topic order.created \
+  --from-beginning
+
+# 최신 메시지만
+docker exec kafka /opt/kafka/bin/kafka-console-consumer.sh \
+  --bootstrap-server localhost:9092 \
+  --topic order.created
+```
+
+### 5.4 Consumer Group Lag 확인
+
+```bash
+# 전체 그룹 목록
+docker exec kafka /opt/kafka/bin/kafka-consumer-groups.sh \
+  --bootstrap-server localhost:9092 --list
+
+# 특정 그룹 상세 (LAG 포함)
+docker exec kafka /opt/kafka/bin/kafka-consumer-groups.sh \
+  --bootstrap-server localhost:9092 \
+  --describe --group order-service
+```
+
+---
+
+## 6. Nexus 배포 (kafka-common-lib)
 
 ```bash
 # ~/.gradle/gradle.properties 에 nexusUsername / nexusPassword 설정 후
