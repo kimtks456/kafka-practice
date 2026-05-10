@@ -151,7 +151,7 @@ class OrderPubSubTest {
     static class SecondGroupConsumer {
         private final AtomicInteger count = new AtomicInteger(0);
 
-        @KafkaListener(topics = "prd.order.created.v1", groupId = "test-second-group")
+        @KafkaListener(topics = "${kafka.topic.order-created}", groupId = "test-second-group")
         public void handle(OrderCreatedEvent event) {
             count.incrementAndGet();
         }

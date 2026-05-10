@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Testcontainers
+@Import(IdempotencyAspectTest.SampleConsumer.class)
 class IdempotencyAspectTest {
 
     @Container
@@ -57,36 +59,39 @@ class IdempotencyAspectTest {
     @Test
     void 첫번째_이벤트_정상_처리() {
         consumer.handle(event);
-        assertEquals(1, consumer.processedCount);
+        assertEquals(1, consumer.getProcessedCount());
     }
 
     @Test
     void 동일_eventId_두번째_호출_skip() {
         consumer.handle(event);
         consumer.handle(event);
-        assertEquals(1, consumer.processedCount);
+        assertEquals(1, consumer.getProcessedCount());
     }
 
     @Test
     void 예외_발생시_키_삭제_후_재시도_성공() {
-        consumer.shouldThrow = true;
+        consumer.setShouldThrow(true);
         assertThrows(RuntimeException.class, () -> consumer.handle(event));
 
-        consumer.shouldThrow = false;
+        consumer.setShouldThrow(false);
         consumer.handle(event);
-        assertEquals(1, consumer.processedCount);
+        assertEquals(1, consumer.getProcessedCount());
     }
 
     @Component
     static class SampleConsumer {
-        int processedCount = 0;
-        boolean shouldThrow = false;
+        private int processedCount = 0;
+        private boolean shouldThrow = false;
 
         @IdempotentConsumer(keyType = IdempotencyKey.EVENT_ID, ttlSeconds = 60)
         public void handle(OrderCreatedEvent event) {
             if (shouldThrow) throw new RuntimeException("test error");
             processedCount++;
         }
+
+        public int getProcessedCount() { return processedCount; }
+        public void setShouldThrow(boolean value) { shouldThrow = value; }
 
         void reset() {
             processedCount = 0;
