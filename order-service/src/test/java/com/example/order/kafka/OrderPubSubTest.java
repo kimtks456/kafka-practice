@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -41,6 +43,8 @@ import static org.mockito.Mockito.verify;
  */
 @SpringBootTest
 @Testcontainers
+@ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Import(OrderPubSubTest.SecondGroupConsumer.class)
 class OrderPubSubTest {
 
