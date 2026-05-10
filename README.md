@@ -43,13 +43,44 @@
 
 ## 로컬 실행
 
-### 1. 인프라 기동
+> **사전 조건 — Colima**  
+> 이 프로젝트는 Docker Desktop 대신 [Colima](https://github.com/abiosoft/colima)를 사용한다.  
+> Docker Desktop은 상업적 환경에서 유료 라이선스가 필요하므로 Apache 2.0 라이선스의 Colima로 대체한다.
+>
+> ```bash
+> brew install colima docker docker-compose
+> ```
+
+### 1. Colima 시작
+
+```bash
+colima start
+```
+
+이미 실행 중이면 건너뛴다 (`colima status`로 확인).
+
+### 2. Testcontainers 환경변수 설정
+
+Testcontainers가 Colima 소켓을 찾을 수 있도록 `~/.zshrc`에 아래 두 줄이 있어야 한다.
+
+```bash
+export DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock"
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+```
+
+적용:
+
+```bash
+source ~/.zshrc
+```
+
+### 3. 인프라 기동
 
 ```bash
 docker compose -f kafka-platform/test/docker-compose.yml up -d
 ```
 
-### 2. 토픽 생성
+### 4. 토픽 생성
 
 ```bash
 docker exec kafka /opt/kafka/bin/kafka-topics.sh \
@@ -57,13 +88,13 @@ docker exec kafka /opt/kafka/bin/kafka-topics.sh \
   --topic prd.order.created.v1 --partitions 6 --replication-factor 1
 ```
 
-### 3. order-service 실행
+### 5. order-service 실행
 
 ```bash
 ./gradlew :order-service:bootRun
 ```
 
-### 4. 이벤트 발행 테스트
+### 6. 이벤트 발행 테스트
 
 ```bash
 curl -X POST http://localhost:8080/orders \
