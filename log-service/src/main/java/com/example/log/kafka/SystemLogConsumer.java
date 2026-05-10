@@ -22,7 +22,7 @@ public class SystemLogConsumer {
     }
 
     @KafkaListener(topics = "${kafka.topic.system-log}", groupId = "${kafka.consumer.system-log.group-id}")
-    @IdempotentConsumer(keyType = IdempotencyKey.EVENT_ID, ttlSeconds = 86400)
+    @IdempotentConsumer(keyType = IdempotencyKey.EVENT_ID, ttlSeconds = 10)
     public void handle(SystemLogEvent event) {
         repository.save(SystemLog.from(event));
         log.info("[Consumer] SystemLog 저장. eventId={} serviceId={} level={}",
