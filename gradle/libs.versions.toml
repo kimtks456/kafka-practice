@@ -5,6 +5,3 @@ dep-management   = "1.1.7"
 [plugins]
 spring-boot    = { id = "org.springframework.boot",        version.ref = "spring-boot" }
 dep-management = { id = "io.spring.dependency-management", version.ref = "dep-management" }
-
-[libraries]
-spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
